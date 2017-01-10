@@ -286,11 +286,11 @@ static int generic_handle_cmd(struct tcmu_device *dev,
 	}
 }
 
-#define TCMU_CDB_MAX_LEN 16 /* 16 bytes for now */
+#define CDB_TO_BUF_SIZE(bytes) ((bytes) * 3 + 1)
 static void tcmu_cdb_debug_info(const struct tcmulib_cmd *cmd)
 {
 	int i, n, bytes;
-	char buf[3 * TCMU_CDB_MAX_LEN + 1];
+	char *buf;
 	uint8_t group_code = cmd->cdb[0] >> 5;
 
 	switch (group_code) {
@@ -320,12 +320,19 @@ static void tcmu_cdb_debug_info(const struct tcmulib_cmd *cmd)
 		bytes = 6;
 	}
 
+	buf = malloc(CDB_TO_BUF_SIZE(bytes));
+	if (!buf) {
+		tcmu_err("out of memory\n");
+		return;
+	}
+
 	for (i = 0, n = 0; i < bytes; i++) {
 		n += sprintf(buf + n, "%x ", cmd->cdb[i]);
 	}
 	sprintf(buf + n, "\n");
 
 	tcmu_dbg(buf);
+	free(buf);
 }
 
 static void *thread_start(void *arg)
