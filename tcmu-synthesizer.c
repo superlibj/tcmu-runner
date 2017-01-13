@@ -23,6 +23,8 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <getopt.h>
+#include <pthread.h>
+#include <signal.h>
 #include <scsi/scsi.h>
 #include "scsi_defs.h"
 
@@ -164,6 +166,19 @@ gboolean tcmulib_callback(GIOChannel *source,
 	return TRUE;
 }
 
+static void sighandler(int signal)
+{
+	tcmu_err("signal %d received!\n", signal);
+
+	tcmu_cancel_log_thread();
+
+	exit(1);
+}
+
+static struct sigaction sync_sigaction = {
+	.sa_handler = sighandler,
+};
+
 static void usage(void) {
 	printf("\nusage:\n");
 	printf("\ttcmu-synthesizer [options]\n");
@@ -186,8 +201,7 @@ int main(int argc, char **argv)
 	GMainLoop *loop;
 	GIOChannel *libtcmu_gio;
 	struct tcmulib_context *ctx;
-
-	tcmu_log_open_syslog(TCMU_SYNC, 0, 0);
+	int ret;
 
 	while (1) {
 		int c;
@@ -217,6 +231,13 @@ int main(int argc, char **argv)
 		tcmu_err("tcmulib_initialize failed\n");
 		exit(1);
 	}
+
+	ret = sigaction(SIGINT, &sync_sigaction, NULL);
+	if (ret) {
+		tcmu_err("couldn't set sigaction\n");
+		exit(1);
+	}
+
 	tcmulib_register(ctx);
 	/* Set up event for libtcmu */
 	libtcmu_gio = g_io_channel_unix_new(tcmulib_get_master_fd(ctx));
@@ -224,6 +245,5 @@ int main(int argc, char **argv)
 	loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(loop);
 	g_main_loop_unref(loop);
-	tcmu_log_close_syslog();
 	return 0;
 }

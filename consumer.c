@@ -18,13 +18,15 @@
  * userspace passthrough devices.
  */
 
-#define _DEFAULT_SOURCE
+#define _GNU_SOURCE
+#define _BITS_UIO_H
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
 #include <endian.h>
+#include <signal.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,7 +37,6 @@
 
 #include <stdint.h>
 #include <scsi/scsi.h>
-#define _BITS_UIO_H
 #include <linux/target_core_user.h>
 #include "libtcmu.h"
 #include "scsi_defs.h"
@@ -132,6 +133,19 @@ static int foo_handle_cmd(
 	}
 }
 
+static void sighandler(int signal)
+{
+	tcmu_err("signal %d received!\n", signal);
+
+	tcmu_cancel_log_thread();
+
+	exit(1);
+}
+
+static struct sigaction consumer_sigaction = {
+	.sa_handler = sighandler,
+};
+
 static struct tcmulib_handler foo_handler = {
 	.name = "Handler for foo devices (example code)",
 	.subtype = "foo",
@@ -150,14 +164,18 @@ int main(int argc, char **argv)
 	int i;
 	int ret;
 
-	tcmu_log_open_syslog(TCMU_CONSUMER, 0, 0);
-
 	/* If any TCMU devices that exist that match subtype,
 	   handler->added() will now be called from within
 	   tcmulib_initialize(). */
 	tcmulib_ctx = tcmulib_initialize(&foo_handler, 1);
 	if (tcmulib_ctx <= 0) {
 		tcmu_err("tcmulib_initialize failed with %p\n", tcmulib_ctx);
+		exit(1);
+	}
+
+	ret = sigaction(SIGINT, &consumer_sigaction, NULL);
+	if (ret) {
+		tcmu_err("couldn't set sigaction\n");
 		exit(1);
 	}
 
@@ -210,8 +228,6 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-
-	tcmu_log_close_syslog();
 
 	return 0;
 }
