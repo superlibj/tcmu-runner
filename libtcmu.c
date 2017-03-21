@@ -405,7 +405,7 @@ static void tcmu_cdb_debug_info(const struct tcmulib_cmd *cmd)
 	}
 	sprintf(buf + n, "\n");
 
-	tcmu_dbg(buf);
+	tcmu_dbg_cdb(buf);
 
 	if (bytes > CDB_FIX_SIZE)
 		free(buf);

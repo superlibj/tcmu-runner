@@ -40,9 +40,11 @@ void tcmu_err_message(const char *funcname, int linenr, const char *fmt, ...);
 void tcmu_warn_message(const char *funcname, int linenr, const char *fmt, ...);
 void tcmu_info_message(const char *funcname, int linenr, const char *fmt, ...);
 void tcmu_dbg_message(const char *funcname, int linenr, const char *fmt, ...);
+void tcmu_dbg_message_cdb(const char *fmt, ...);
 
 #define tcmu_err(...)  {tcmu_err_message(__func__, __LINE__, __VA_ARGS__);}
 #define tcmu_warn(...) {tcmu_warn_message(__func__, __LINE__, __VA_ARGS__);}
 #define tcmu_info(...) {tcmu_info_message(__func__, __LINE__, __VA_ARGS__);}
 #define tcmu_dbg(...)  {tcmu_dbg_message(__func__, __LINE__, __VA_ARGS__);}
+#define tcmu_dbg_cdb(...)  {tcmu_dbg_message_cdb(__VA_ARGS__);}
 #endif /* __TCMU_LOG_H */

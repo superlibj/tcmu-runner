@@ -224,6 +224,15 @@ void tcmu_dbg_message(const char *funcname, int linenr, const char *fmt, ...)
 	va_end(args);
 }
 
+void tcmu_dbg_message_cdb(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	fprintf(stderr, fmt, args);
+	va_end(args);
+}
+
 static void log_output(int pri, const char *msg)
 {
 	log_to_syslog(pri, msg);
