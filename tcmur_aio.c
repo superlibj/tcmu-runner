@@ -132,8 +132,7 @@ int async_handle_cmd(struct tcmu_device *dev, struct tcmulib_cmd *cmd,
 		     tcmu_work_fn_t work_fn)
 {
 	int ret;
-	struct tcmulib_handler *handler = tcmu_get_dev_handler(dev);
-	struct tcmur_handler *rhandler = handler->hm_private;
+	struct tcmur_handler *rhandler = tcmu_get_runner_handler(dev);
 
 	if (!rhandler->nr_threads) {
 		ret = work_fn(dev, cmd);
@@ -175,8 +174,7 @@ void cleanup_aio_tracking(struct tcmu_device *dev)
 
 void cleanup_io_work_queue_threads(struct tcmu_device *dev)
 {
-	struct tcmulib_handler *handler = tcmu_get_dev_handler(dev);
-	struct tcmur_handler *r_handler = handler->hm_private;
+	struct tcmur_handler *r_handler = tcmu_get_runner_handler(dev);
 	struct tcmu_io_queue *io_wq = &dev->work_queue;
 	int i, nr_threads = r_handler->nr_threads;
 
@@ -193,8 +191,7 @@ void cleanup_io_work_queue_threads(struct tcmu_device *dev)
 
 int setup_io_work_queue(struct tcmu_device *dev)
 {
-	struct tcmulib_handler *handler = tcmu_get_dev_handler(dev);
-	struct tcmur_handler *r_handler = handler->hm_private;
+	struct tcmur_handler *r_handler = tcmu_get_runner_handler(dev);
 	struct tcmu_io_queue *io_wq = &dev->work_queue;
 	int ret, i, nr_threads = r_handler->nr_threads;
 
